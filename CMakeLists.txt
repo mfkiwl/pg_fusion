@@ -30,7 +30,6 @@ find_package(rcl_interfaces REQUIRED)
 find_package(rcutils REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
-find_package(ublox_msgs REQUIRED)
 find_package(visualization_msgs REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(tf2_ros REQUIRED)
@@ -39,8 +38,7 @@ find_package(yaml-cpp REQUIRED)
 find_package(cv_bridge REQUIRED)
 find_package(OpenCV REQUIRED)
 find_package(Ceres REQUIRED)
-find_package(PCL REQUIRED)
-find_package(isae_slam CONFIG REQUIRED)
+find_package(isae_slam REQUIRED)
 find_package(Boost REQUIRED COMPONENTS system)
 
 include_directories(
@@ -69,7 +67,7 @@ set(HEADERS
 )
 add_library(${PROJECT_NAME} SHARED ${SOURCE} ${HEADERS})
 message(STATUS ${ISAE_SLAM_LIBRARIES})
-target_link_libraries(${PROJECT_NAME} ${OpenCV_LIBS} ${YAML_CPP_LIBRARIES} ${PCL_LIBRARIES} ${CERES_LIBRARIES} ${Boost_SYSTEM_LIBRARY} ${ISAE_SLAM_LIBRARIES} /home/cesar/ros2_ws/src/SaDVIO/cpp/build/libisae_slam.so)
+target_link_libraries(${PROJECT_NAME} ${OpenCV_LIBS} ${YAML_CPP_LIBRARIES} ${CERES_LIBRARIES} ${Boost_SYSTEM_LIBRARY} ${ISAE_SLAM_LIBRARIES})
 
 install(
   TARGETS ${PROJECT_NAME}
@@ -82,7 +80,7 @@ install(
 # Executables generation
 # -------------------------------------------------------------------
 add_executable(pg_main main.cpp)
-ament_target_dependencies(pg_main isae_slam rclcpp sensor_msgs visualization_msgs tf2_ros tf2_geometry_msgs std_msgs ublox_msgs cv_bridge)
+ament_target_dependencies(pg_main isae_slam rclcpp sensor_msgs visualization_msgs tf2_ros tf2_geometry_msgs std_msgs cv_bridge)
 target_link_libraries(pg_main ${PROJECT_NAME})
 
 install(TARGETS pg_main

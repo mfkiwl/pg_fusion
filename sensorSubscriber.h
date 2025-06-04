@@ -120,10 +120,10 @@ class SensorSubscriber : public rclcpp::Node {
                     t_curr       = time0;
 
                     // sync tolerance
-                    if (time0 < time1 - 20000000) {
+                    if (time0 < time1 - 25000000) {
                         _imgs_bufl.pop();
                         std::cout << "\n Throw img0 -- Sync error : " << (time0 - time1) << "\n";
-                    } else if (time0 > time1 + 20000000) {
+                    } else if (time0 > time1 + 25000000) {
                         _imgs_bufr.pop();
                         std::cout << "\n Throw img1 -- Sync error : " << (time0 - time1) << "\n";
                     } else {
@@ -202,6 +202,7 @@ class SensorSubscriber : public rclcpp::Node {
             // IMU message
             if (!_imu_buf.empty()) {
                 t_curr = _imu_buf.front().header.stamp.sec * 1e9 + _imu_buf.front().header.stamp.nanosec;
+                t_curr -= _prov->getIMUConfig()->dt_imu_cam * 1e9;
 
                 // Check if this measurement can be added to the current frame
                 if (std::abs(t_curr - t_last) * 1e-9 > time_tolerance && !sensors.empty()) {
@@ -231,6 +232,9 @@ class SensorSubscriber : public rclcpp::Node {
 
                 t_last = t_curr;
             }
+
+            std::this_thread::sleep_for(std::chrono::milliseconds(1));
+
         }
 
         std::cout << "\n Bag reader SyncProcess thread is terminating!\n";

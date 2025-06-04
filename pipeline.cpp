@@ -61,14 +61,26 @@ void Pipeline::init() {
     // Wait for a frame with GPS
     while (_nf->_gnss_meas == nullptr) {
         _nf = next();
+
+        // Set KF if GNSS meas
+        if (_nf->_gnss_meas != nullptr)
+            _nf->_frame->setKeyFrame();
+
         _slam->_slam_param->getDataProvider()->addFrameToTheQueue(_nf->_frame);
     }
-    _nf->_frame->setKeyFrame();
 
     // Get the ouput from the SLAM
     std::shared_ptr<isae::Frame> frame_ready = _slam->_frame_to_display;
     while (frame_ready != _nf->_frame) {
         frame_ready = _slam->_frame_to_display;
+
+        // If the SLAM is not initialized, reinitialize
+        if (!_slam->_is_init) {
+            _is_init = false;
+            return;
+        }
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
 
     // Save the pose in the SLAM frame
@@ -167,7 +179,7 @@ void Pipeline::step() {
         AbsolutePositionFactor af;
         af.t = T_n_f.translation();
         if (_remove_z_estimate)
-            af.t.z() = _nf->_T_w_f.translation().z(); // Set the altitude with the slam as the estimate tend to drift
+            af.t.z() = 0; //_nf->_T_w_f.translation().z(); // Set the altitude with the slam as the estimate tend to drift
         af.nf  = _nf;
         af.inf = Eigen::Matrix3d::Identity();
         if (_nf->_gnss_meas->cov.norm() > 1e-4) {
@@ -357,6 +369,12 @@ void Pipeline::calibrateRotation4DoF() {
 }
 
 void Pipeline::updateRelativeFactors() {
+
+    // Update current pose
+    _nf->_T_w_f               = _nf->_frame->getFrame2WorldTransform();
+    Eigen::Affine3d T_n_flast = _nav_frames.back()->_T_n_f;
+    Eigen::Affine3d T_flast_f = _nav_frames.back()->_T_w_f.inverse() * _nf->_T_w_f;
+    _T_n_f                    = T_n_flast * T_flast_f;
 
     // Parse every relative factor
     for (auto nf_relfact : _pg->_nf_relfact_map) {
